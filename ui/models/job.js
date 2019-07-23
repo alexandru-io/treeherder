@@ -20,22 +20,23 @@ export default class JobModel {
     // endpoint e.g. the similar jobs endpoint. It defaults to the job
     // list endpoint.
     const { fetchAll, uri: configUri } = config;
-    const jobUri = configUri || getProjectUrl(uri);
+    const jobUri = configUri || getApiUrl(`/ui${uri}`);
     const { data, failureStatus } = await getData(
       `${jobUri}${options ? createQueryParams(options) : ''}`,
     );
 
     if (!failureStatus) {
-      const { results, meta, job_property_names } = data;
+      const { results, job_property_names, next } = data;
       let itemList;
       let nextPagesJobs = [];
 
       // if the number of elements returned equals the page size,
       // fetch the next pages
-      if (fetchAll && results.length === meta.count) {
-        const count = parseInt(meta.count, 10);
-        const offset = parseInt(meta.offset, 10) + count;
-        const newOptions = { ...options, offset, count };
+      if (fetchAll && next) {
+        // const count = parseInt(meta.count, 10);
+        // const offset = parseInt(meta.offset, 10) + count;
+        const page = new URLSearchParams(next.split('?')[1]).get('page');
+        const newOptions = { ...options, page };
         const {
           data: nextData,
           failureStatus: nextFailureStatus,
@@ -82,7 +83,7 @@ export default class JobModel {
     config = config || {};
     // The similar jobs endpoints returns the same type of objects as
     // the job list endpoint, so let's reuse the getList method logic.
-    config.uri = `${getProjectUrl(uri)}${pk}/similar_jobs/`;
+    config.uri = `${getApiUrl(uri)}${pk}/similar_jobs/`;
     return JobModel.getList(options, config);
   }
 

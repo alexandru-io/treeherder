@@ -1,4 +1,5 @@
 import re
+import logging
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,6 +9,7 @@ from treeherder.model import models
 from treeherder.webapp.api.utils import (REPO_GROUPS,
                                          to_timestamp)
 
+logger = logging.getLogger(__name__)
 
 class NoOpSerializer(serializers.Serializer):
     """
@@ -91,6 +93,38 @@ class JobSerializer(serializers.ModelSerializer):
             'tier': job.tier,
             'who': job.who
         }
+
+    class Meta:
+        model = models.Job
+        fields = '__all__'
+
+
+class JobUISerializer(serializers.ModelSerializer):
+    option_collection_map = models.OptionCollection.objects.get_option_collection_map()
+
+    def to_representation(self, job):
+        return [
+            models.Job.get_duration(
+                job['submit_time'], job['start_time'], job['end_time']
+            ),
+            job['failure_classification_id'],
+            job['id'],
+            job['job_group__name'],
+            job['job_group__symbol'],
+            job['job_type__name'],
+            job['job_type__symbol'],
+            job['last_modified'],
+            job['option_collection_hash'],
+            job['machine_platform__platform'],
+            JobUISerializer.option_collection_map.get(
+                job['option_collection_hash'], ''
+            ),
+            job['push_id'],
+            job['result'],
+            job['signature__signature'],
+            job['state'],
+            job['tier'],
+        ]
 
     class Meta:
         model = models.Job

@@ -22,7 +22,7 @@ import { reloadOnChangeParameters } from '../../helpers/filter';
 import Push from './Push';
 import PushLoadErrors from './PushLoadErrors';
 
-const PUSH_POLL_INTERVAL = 60000;
+const PUSH_POLL_INTERVAL = 10000;
 
 class PushList extends React.Component {
   constructor(props) {
@@ -38,7 +38,7 @@ class PushList extends React.Component {
 
     window.addEventListener('hashchange', this.handleUrlChanges, false);
     fetchPushes();
-    this.poll();
+    // this.poll();
   }
 
   componentDidUpdate(prevProps) {

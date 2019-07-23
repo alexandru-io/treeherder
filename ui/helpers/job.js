@@ -239,6 +239,16 @@ export const addAggregateFields = function addAggregateFields(job) {
   return job;
 };
 
+// Remove any fields we don't need for display in the greater job field.
+// This function may be retired later in favor of just returning less data
+// from the server for the greater list of jobs.
+export const trim = function trim(job) {
+  delete job.option_collection_hash;
+  delete job.job_group_name;
+  delete job.job_type_name;
+  delete job.signature;
+};
+
 export const getJobSearchStrHref = function getJobSearchStrHref(jobSearchStr) {
   const params = getAllUrlParams();
   params.set('searchStr', jobSearchStr.split(' '));

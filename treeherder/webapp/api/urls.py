@@ -91,6 +91,11 @@ tle_router.register(r'text-log-error',
                     text_log_error.TextLogErrorViewSet,
                     base_name='text-log-error')
 
+# This router has urls for the UI only.  No guarantee these
+# won't change, so they're not for general consumption.
+ui_router = routers.SimpleRouter()
+ui_router.register(r'jobs', jobs.JobsUIViewSet, base_name='jobs')
+
 # refdata endpoints:
 default_router = routers.DefaultRouter()
 default_router.register(r'repository', refdata.RepositoryViewSet)
@@ -126,6 +131,7 @@ urlpatterns = [
     url(r'^project/(?P<project>[\w-]{0,50})/', include(project_bound_router.urls)),
     url(r'^', include(default_router.urls)),
     url(r'^', include(tle_router.urls)),
+    url(r'^ui/', include(ui_router.urls)),
     url(r'^failures/$', intermittents_view.Failures.as_view(), name='failures'),
     url(r'^failuresbybug/$', intermittents_view.FailuresByBug.as_view(), name='failures-by-bug'),
     url(r'^failurecount/$', intermittents_view.FailureCount.as_view(), name='failure-count'),

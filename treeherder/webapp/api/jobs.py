@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import django_filters
 from dateutil import parser
@@ -9,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.status import (HTTP_400_BAD_REQUEST,
                                    HTTP_404_NOT_FOUND)
 
@@ -25,6 +27,8 @@ from treeherder.webapp.api import (pagination,
 from treeherder.webapp.api.utils import (CharInFilter,
                                          NumberInFilter,
                                          to_timestamp)
+
+logger = logging.getLogger(__name__)
 
 
 class JobFilter(django_filters.FilterSet):
@@ -96,9 +100,76 @@ class JobFilter(django_filters.FilterSet):
         }
 
 
+class JobPagination(PageNumberPagination):
+    page_size = 2000
+    page_size_query_param = 'count'
+    max_page_size = 2000
+
+
+class JobsUIViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    This viewset is the jobs endpoint.
+    """
+    _default_select_related = [
+        'job_type',
+        'job_group',
+        'machine_platform',
+        'signature',
+    ]
+    _query_field_names = [
+        'submit_time',
+        'start_time',
+        'end_time',
+        'failure_classification_id',
+        'id',
+        'job_group__name',
+        'job_group__symbol',
+        'job_type__name',
+        'job_type__symbol',
+        'last_modified',
+        'option_collection_hash',
+        'machine_platform__platform',
+        'option_collection_hash',
+        'push_id',
+        'result',
+        'signature__signature',
+        'state',
+        'tier',
+    ]
+    _output_field_names = [
+        'duration',
+        'failure_classification_id',
+        'id',
+        'job_group_name',
+        'job_group_symbol',
+        'job_type_name',
+        'job_type_symbol',
+        'last_modified',
+        'option_collection_hash',
+        'platform',
+        'platform_option',
+        'push_id',
+        'result',
+        'signature',
+        'state',
+        'tier',
+    ]
+    queryset = Job.objects.all().select_related(
+        *_default_select_related
+    ).values(*_query_field_names)
+    serializer_class = serializers.JobUISerializer
+    filterset_class = JobFilter
+    pagination_class = JobPagination
+
+    def list(self, request, *args, **kwargs):
+        resp = super().list(request, *args, **kwargs)
+        resp.data['job_property_names'] = self._output_field_names
+        return Response(resp.data)
+
+
 class JobsViewSet(viewsets.ViewSet):
     """
-    This viewset is responsible for the jobs endpoint.
+    This viewset is the project bound version of the jobs endpoint.
     """
 
     # data that we want to do select_related on when returning job objects
@@ -150,8 +221,10 @@ class JobsViewSet(viewsets.ViewSet):
         ('who', 'who', None),
     ]
 
-    _option_collection_hash_idx = [pq[0] for pq in _property_query_mapping].index(
-        'option_collection_hash')
+    _option_collection_hash_idx = [pq[0] for pq in _property_query_mapping].index('option_collection_hash')
+    _start_time_idx = [pq[0] for pq in _property_query_mapping].index('start_timestamp')
+    _end_time_idx = [pq[0] for pq in _property_query_mapping].index('end_timestamp')
+    _submit_time_idx = [pq[0] for pq in _property_query_mapping].index('submit_timestamp')
 
     def _get_job_list_response(self, job_qs, offset, count, return_type):
         '''
@@ -168,6 +241,11 @@ class JobsViewSet(viewsets.ViewSet):
             platform_option = option_collection_map.get(
                 values[self._option_collection_hash_idx],
                 "")
+            duration = Job.get_duration(
+                values[self._submit_time_idx],
+                values[self._start_time_idx],
+                values[self._end_time_idx],
+            )
             # some values need to be transformed
             values = list(values)
             for (i, _) in enumerate(values):
@@ -179,10 +257,10 @@ class JobsViewSet(viewsets.ViewSet):
             if return_type == 'dict':
                 results.append(dict(zip(
                     [pq[0] for pq in self._property_query_mapping] +
-                    ['platform_option'],
-                    values + [platform_option])))
+                    ['platform_option', 'duration'],
+                    values + [platform_option, duration])))
             else:
-                results.append(values + [platform_option])
+                results.append(values + [platform_option, duration])
 
         response_dict = {
             'results': results

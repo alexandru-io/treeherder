@@ -26,6 +26,7 @@ import { Revision } from './Revision';
 import PushHeader from './PushHeader';
 import PushJobs from './PushJobs';
 import { RevisionList } from './RevisionList';
+import { trim } from '../../helpers/job';
 
 const watchCycleStates = ['none', 'push', 'job', 'none'];
 const platformArray = Object.values(thPlatformMap);
@@ -147,8 +148,6 @@ class Push extends React.PureComponent {
     const { data, failureStatus } = await JobModel.getList(
       {
         push_id: push.id,
-        count: 2000,
-        return_type: 'list',
       },
       { fetchAll: true },
     );
@@ -226,6 +225,7 @@ class Push extends React.PureComponent {
         platform.groups.push(group);
       }
       group.jobs.push(job);
+      trim(job);
     });
     return platforms;
   };
