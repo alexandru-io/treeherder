@@ -56,12 +56,12 @@ class SimilarJobsTab extends React.Component {
       }
     });
 
-    const newSimilarJobs = await JobModel.getSimilarJobs(
-      selectedJob.id,
-      options,
-    );
+    const {
+      data: newSimilarJobs,
+      failureStatus,
+    } = await JobModel.getSimilarJobs(selectedJob.id, options);
 
-    if (newSimilarJobs.length > 0) {
+    if (!failureStatus) {
       this.setState({ hasNextPage: newSimilarJobs.length > this.pageSize });
       newSimilarJobs.pop();
       // create an array of unique push ids
@@ -97,10 +97,18 @@ class SimilarJobsTab extends React.Component {
           this.showJobInfo(newSimilarJobs[0]);
         }
       } else {
-        notify(`Error fetching similar jobs push data: ${data}`, 'danger', {
-          sticky: true,
-        });
+        notify(
+          `Error fetching similar jobs push data: ${failureStatus}`,
+          'danger',
+          {
+            sticky: true,
+          },
+        );
       }
+    } else {
+      notify(`Error fetching similar jobs: ${failureStatus}`, 'danger', {
+        sticky: true,
+      });
     }
     this.setState({ isLoading: false });
   };
