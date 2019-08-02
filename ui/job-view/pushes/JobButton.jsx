@@ -109,7 +109,6 @@ export default class JobButtonComponent extends React.Component {
 
     if (runnable) {
       classes.push('runnable-job-btn', 'runnable');
-      attributes['data-buildername'] = ref_data_name;
       if (isRunnableSelected) {
         classes.push('runnable-job-btn-selected');
       }
