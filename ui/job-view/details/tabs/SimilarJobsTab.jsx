@@ -42,7 +42,7 @@ class SimilarJobsTab extends React.Component {
 
   getSimilarJobs = async () => {
     const { page, similarJobs, selectedSimilarJob } = this.state;
-    const { repoName, selectedJob, notify } = this.props;
+    const { repoName, selectedJobFull, notify } = this.props;
     const options = {
       // get one extra to detect if there are more jobs that can be loaded (hasNextPage)
       count: this.pageSize + 1,
@@ -52,12 +52,12 @@ class SimilarJobsTab extends React.Component {
     ['filterBuildPlatformId', 'filterOptionCollectionHash'].forEach(key => {
       if (this.state[key]) {
         const field = this.filterMap[key];
-        options[field] = selectedJob[field];
+        options[field] = selectedJobFull[field];
       }
     });
 
     const newSimilarJobs = await JobModel.getSimilarJobs(
-      selectedJob.id,
+      selectedJobFull.id,
       options,
     );
 
@@ -325,7 +325,7 @@ SimilarJobsTab.propTypes = {
   repoName: PropTypes.string.isRequired,
   classificationMap: PropTypes.object.isRequired,
   notify: PropTypes.func.isRequired,
-  selectedJob: PropTypes.object,
+  selectedJobFull: PropTypes.object.isRequired,
 };
 
 SimilarJobsTab.defaultProps = {
