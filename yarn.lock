@@ -8850,11 +8850,12 @@ tar@^4:
     safe-buffer "^5.1.2"
     yallist "^3.0.3"
 
-taskcluster-client-web@8.1.1:
-  version "8.1.1"
-  resolved "https://registry.yarnpkg.com/taskcluster-client-web/-/taskcluster-client-web-8.1.1.tgz#6f557f5e3c26d9305568860300e4e5f7c18d2632"
-  integrity sha512-slyN56AT02HcV/kwrBBEg/IWRS20XVqFVT9x6gEuD7Pa7FE7KvVZdqJUR+X2z3PZhzEz3/wmhumVZnXsA1BdTw==
+taskcluster-client-web@16.0.0:
+  version "16.0.0"
+  resolved "https://registry.yarnpkg.com/taskcluster-client-web/-/taskcluster-client-web-16.0.0.tgz#ebe801330351eeb1ff4440f3ba0710b84e1a613f"
+  integrity sha512-8AE13I+JgNqJdhm5WNQZAnMZ8/VPVQBLR45jlr1yOFgQ58cQhEVZm7z8g6K1yo0cVnfF9ZnOM7GMY+bjaM0FyA==
   dependencies:
+    crypto-js "^3.1.9-1"
     hawk "^7.0.7"
     query-string "^6.1.0"
     taskcluster-lib-urls "^10.0.0"
