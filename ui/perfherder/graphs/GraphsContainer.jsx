@@ -9,7 +9,7 @@ import {
   VictoryAxis,
   VictoryBrushContainer,
   VictoryScatter,
-  createContainer,
+  VictorySelectionContainer,
 } from 'victory';
 import moment from 'moment';
 import debounce from 'lodash/debounce';
@@ -19,12 +19,9 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import { graphColors } from '../constants';
 
-const VictoryZoomVoronoiContainer = createContainer('zoom', 'voronoi');
-
 class GraphsContainer extends React.Component {
   constructor(props) {
     super(props);
-    this.updateZoom = debounce(this.updateZoom.bind(this), 500);
     this.updateSelection = debounce(this.updateSelection.bind(this), 500);
     this.tooltip = React.createRef();
     this.state = {
@@ -41,7 +38,6 @@ class GraphsContainer extends React.Component {
 
   componentDidMount() {
     this.addHighlights();
-    this.updateData();
   }
 
   componentDidUpdate(prevProps) {
@@ -135,46 +131,20 @@ class GraphsContainer extends React.Component {
     top: point.y - yOffset,
   });
 
-  updateData() {
-    const { selectedDomain } = this.state;
-    const { testData } = this.props;
-
-    // we do this (along with debouncing updateSelection and updateZoom)
-    // to make zooming faster by removing unneeded data points based on
-    // the updated selectedDomain
-    if (selectedDomain.x && selectedDomain.y) {
-      const scatterPlotData = testData
-        .flatMap(item => (item.visible ? item.data : []))
-        .filter(
-          data =>
-            data.x >= selectedDomain.x[0] &&
-            data.x <= selectedDomain.x[1] &&
-            data.y >= selectedDomain.y[0] &&
-            data.y <= selectedDomain.y[1],
-        );
-      this.setState({ scatterPlotData });
-    }
-  }
-
+  // debounced in constructor
   updateSelection(selectedDomain) {
-    this.setState({ selectedDomain }, this.updateData);
-  }
-
-  updateZoom(zoom) {
-    this.props.updateStateParams({ zoom });
+    this.setState({ selectedDomain });
   }
 
   // TODO
   // - apply style to datapoint based on the selected query params
   //   and then show tooltip
-  // - when another tooltip is selected or tooltip is closed,
-  //   remove highlight style attributes on datapoint
+
   showTooltip = (dataPoint, lock = false) => {
     const { showTooltip, selectedDataPoint } = this.state;
     const position = this.getTooltipPosition(dataPoint);
 
     this.hideTooltip.cancel();
-    // console.log(dataPoint.data.find(datum => datum.style.strokeOpacity === 0.3));
     this.tooltip.current.style.cssText = `left: ${position.left}px; top: ${position.top}px;`;
 
     if (!showTooltip || lock) {
@@ -208,7 +178,7 @@ class GraphsContainer extends React.Component {
   };
 
   render() {
-    const { testData, zoom } = this.props;
+    const { testData } = this.props;
     const {
       selectedDomain,
       highlights,
@@ -235,9 +205,7 @@ class GraphsContainer extends React.Component {
               title="close tooltip"
             />
           </span>
-          <div className="body">
-            Hello
-          </div>
+          <div className="body">Hello</div>
           <div className="tip" />
         </div>
         <Row>
@@ -252,7 +220,7 @@ class GraphsContainer extends React.Component {
               <VictoryBrushContainer
                 responsive={false}
                 brushDomain={selectedDomain}
-                onBrushDomainChange={this.updateZoom}
+                onBrushDomainChange={this.updateSelection}
               />
             }
           >
@@ -287,13 +255,12 @@ class GraphsContainer extends React.Component {
             width={1200}
             height={350}
             scale={{ x: 'time', y: 'linear' }}
-            domain={entireDomain}
+            domain={selectedDomain}
             domainPadding={{ y: 40 }}
             containerComponent={
-              <VictoryZoomVoronoiContainer
+              <VictorySelectionContainer
                 responsive={false}
-                zoomDomain={zoom}
-                onZoomDomainChange={this.updateSelection}
+                onSelection={(points, bounds) => this.updateSelection(bounds)}
               />
             }
           >
@@ -318,7 +285,7 @@ class GraphsContainer extends React.Component {
                   strokeWidth: data => (data.alertSummary ? 12 : 2),
                 },
               }}
-              size={() => 3}
+              size={() => 5}
               data={scatterPlotData}
               events={[
                 {
@@ -329,7 +296,6 @@ class GraphsContainer extends React.Component {
                         {
                           target: 'data',
                           mutation: props => this.showTooltip(props, true),
-                          // callback: () => console.log(parentProps),
                         },
                       ];
                     },
