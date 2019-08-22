@@ -287,6 +287,26 @@ th {
   transition: color 150ms ease-in-out;
 }
 
+.compare-table .link-style a {
+  color: transparent;
+  transition: color 150ms ease-in-out;
+  text-decoration: none;
+}
+
+.link-style a {
+  padding-left: 0.5rem;
+}
+
+.compare-table tr:hover .link-style a {
+  color: #333;
+  text-decoration: none;
+}
+
+.compare-table tr:hover .link-style a:hover {
+  color: #337ab7;
+}
+
+
 .compare-table tr:hover .result-links span {
   color: #333;
 }

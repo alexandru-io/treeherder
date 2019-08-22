@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import React from 'react';
 import { Table } from 'reactstrap';
 import PropTypes from 'prop-types';
@@ -28,14 +29,41 @@ export default class CompareTable extends React.PureComponent {
       displayNumber(percentage),
     )}% ${improvement ? 'better' : 'worse'})`;
 
+  hashCode = text => {
+    let hash = 0;
+    if (this.length == 0) {
+      return hash;
+    }
+    for (let i = 0; i < text.length; i++) {
+      const char = text.charCodeAt(i);
+      // eslint-disable-next-line no-bitwise
+      hash = (hash << 5) - hash + char;
+      // eslint-disable-next-line no-bitwise
+      // hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+  };
+
+  scrollToElement = (id, duration) => {
+    if (duration === undefined) {
+      duration = 50;
+    }
+    const body = $('body');
+    const targetEl = $(id);
+    $('body').scrollTo(targetEl, duration);
+  };
+
   render() {
     const { data, testName } = this.props;
     return (
       <Table sz="small" className="compare-table mb-0 px-0" key={testName}>
         <thead>
-          <tr className="subtest-header bg-lightgray">
+          <tr id={testName.replace(/ /g, '')} className="subtest-header bg-lightgray">
             <th className="text-left">
               <span>{testName}</span>
+              <span className="link-style">
+                <a href={this.scrollToElement(testName.replace(/ /g, ''))}>¶</a>
+              </span>
             </th>
             <th className="table-width-lg">Base</th>
             {/* empty for less than/greater than data */}
@@ -55,6 +83,11 @@ export default class CompareTable extends React.PureComponent {
                 {results.name}
                 {results.links && (
                   <span className="result-links">
+                    <span className="link-style">
+                      <a href={this.scrollToElement(`${testName.replace(/ /g, '')}-${results.name}`)}>
+                        ¶
+                      </a>
+                    </span>
                     {results.links.map(link => (
                       <span key={link.title}>
                         <a href={link.href}>{` ${link.title}`}</a>

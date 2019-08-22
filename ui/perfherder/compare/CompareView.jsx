@@ -229,6 +229,8 @@ export class CompareView extends React.PureComponent {
   };
 
   render() {
+    const { $location } = this.props;
+    const hash = $location.hash();
     return (
       <CompareTableView
         {...this.props}
@@ -255,12 +257,14 @@ CompareView.propTypes = {
   }),
   $stateParams: PropTypes.shape({}),
   $state: PropTypes.shape({}),
+  $location: null,
 };
 
 CompareView.defaultProps = {
   validated: PropTypes.shape({}),
   $stateParams: null,
   $state: null,
+  $location: null,
 };
 
 const requiredParams = new Set([
@@ -273,7 +277,7 @@ const compareView = withValidation(requiredParams)(CompareView);
 
 perf.component(
   'compareView',
-  react2angular(compareView, [], ['$stateParams', '$state']),
+  react2angular(compareView, [], ['$stateParams', '$state', '$location']),
 );
 
 export default compareView;
